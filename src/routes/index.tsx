@@ -1,9 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import diagram from "@/assets/diagram.jpg";
 import { GameFrame } from "@/components/GameFrame";
-import { Leaderboard } from "@/components/Leaderboard";
-import { useAuth } from "@/hooks/use-auth";
+import { Navbar, Footer } from "@/components/Navbar";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -15,82 +14,22 @@ export const Route = createFileRoute("/")({
         content:
           "NEO-DINO — переосмислення класичного Google-динозавра у форматі 3D. Грайте в браузері, ставте рекорди та змагайтеся з іншими гравцями.",
       },
+      { property: "og:title", content: "NEO-DINO — 3D Браузерна гра" },
+      {
+        property: "og:description",
+        content:
+          "3D-раннер прямо в браузері. Одна клавіша, нескінченний забіг, глобальний рейтинг.",
+      },
     ],
   }),
 });
 
-const features = [
-  {
-    color: "border-primary",
-    title: "Справжнє 3D",
-    desc: "Низькополігональна графіка з динамічним освітленням і кастомними шейдерами.",
-  },
-  {
-    color: "border-secondary",
-    title: "Глобальна таблиця лідерів",
-    desc: "Твій результат миттєво потрапляє в топ після кожного забігу.",
-  },
-  {
-    color: "border-accent",
-    title: "Одна клавіша",
-    desc: "Тільки SPACE — стрибок. Реакція вирішує все.",
-  },
-];
-
 function Index() {
-  const { user, username, signOut, loading } = useAuth();
-  const navigate = useNavigate();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [, setRefreshKey] = useState(0);
 
   return (
-    <div className="min-h-screen bg-bg text-slate-300 font-sans selection:bg-primary/30">
-      {/* Navigation */}
-      <nav className="border-b border-white/5 py-4 px-6 md:px-8 flex justify-between items-center sticky top-0 bg-bg/80 backdrop-blur-md z-50">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="size-8 bg-gradient-to-tr from-primary to-secondary rounded-lg" />
-          <span className="font-display font-bold text-xl tracking-tighter text-white">
-            NEO-DINO
-          </span>
-        </Link>
-        <div className="hidden md:flex gap-8 text-xs font-medium uppercase tracking-widest">
-          <a href="#game" className="hover:text-primary transition-colors">
-            Гра
-          </a>
-          <a href="#how-to-play" className="hover:text-primary transition-colors">
-            Керування
-          </a>
-          <a href="#leaderboard" className="hover:text-primary transition-colors">
-            Рейтинг
-          </a>
-          <a href="#about" className="hover:text-primary transition-colors">
-            Проект
-          </a>
-        </div>
-        {loading ? (
-          <div className="w-20 h-8" />
-        ) : user ? (
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline text-primary font-mono text-xs uppercase tracking-widest">
-              {username ?? "..."}
-            </span>
-            <button
-              type="button"
-              onClick={signOut}
-              className="px-4 py-2 border border-white/10 hover:border-accent/50 text-slate-400 hover:text-accent text-xs font-bold uppercase tracking-widest transition-all"
-            >
-              Вийти
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => navigate({ to: "/auth" })}
-            className="px-5 py-2 border border-primary/20 hover:border-primary/50 text-primary text-xs font-bold uppercase tracking-widest transition-all"
-          >
-            Увійти
-          </button>
-        )}
-      </nav>
+    <div className="min-h-screen bg-bg text-slate-300 font-sans selection:bg-primary/30 flex flex-col">
+      <Navbar />
 
       {/* Hero */}
       <section className="pt-20 pb-12 px-6 md:px-8 flex flex-col items-center text-center">
@@ -118,58 +57,51 @@ function Index() {
         <GameFrame onScoreSaved={() => setRefreshKey((k) => k + 1)} />
       </section>
 
-      {/* Controls & Features */}
-      <section id="how-to-play" className="px-6 md:px-8 py-24 bg-surface/30">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16">
-          <div>
-            <h2 className="font-display text-3xl font-bold text-white mb-8">
-              ЯК ГРАТИ
-            </h2>
-            <div className="flex items-center gap-6 p-6 border border-primary/20 bg-primary/5 rounded-xl neon-glow">
-              <div className="px-6 py-4 rounded bg-bg border border-primary/40 text-primary font-mono text-sm font-bold">
-                SPACE
-              </div>
-              <div>
-                <p className="text-white font-bold text-lg">Стрибок</p>
-                <p className="text-sm text-slate-400 mt-1">
-                  Єдина клавіша керування. Натисни, щоб перестрибнути перешкоду.
-                  Розрахуй момент — і твій результат опиниться у топі.
-                </p>
-              </div>
-            </div>
-            <p className="mt-4 text-xs text-slate-500 font-mono uppercase tracking-widest">
-              Авто-біг · нескінченні перешкоди · реакція вирішує все
+      {/* Quick links to other pages */}
+      <section className="px-6 md:px-8 py-16 bg-surface/30">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
+          <Link
+            to="/how-to-play"
+            className="group p-6 border border-primary/20 hover:border-primary/60 rounded-xl bg-bg/40 transition-all"
+          >
+            <p className="text-[10px] uppercase tracking-widest text-primary mb-2">
+              01
             </p>
-          </div>
-
-          <div>
-            <h2 className="font-display text-3xl font-bold text-white mb-8">
-              КЛЮЧОВІ ОСОБЛИВОСТІ
-            </h2>
-            <div className="space-y-6">
-              {features.map((f) => (
-                <div key={f.title} className={`border-l-2 ${f.color} pl-6`}>
-                  <h3 className="text-white font-bold">{f.title}</h3>
-                  <p className="text-sm text-slate-500 mt-1">{f.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Leaderboard */}
-      <section id="leaderboard" className="px-6 md:px-8 py-24">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="font-display text-4xl font-bold text-white">
-              ТОП ГРАВЦІВ
-            </h2>
-            <p className="text-primary text-xs uppercase tracking-widest mt-2">
-              Оновлюється після кожного забігу
+            <h3 className="font-display text-2xl text-white font-bold mb-2 group-hover:text-primary transition-colors">
+              Як грати
+            </h3>
+            <p className="text-sm text-slate-400">
+              Керування, правила та поради для високих результатів.
             </p>
-          </div>
-          <Leaderboard refreshKey={refreshKey} />
+          </Link>
+          <Link
+            to="/features"
+            className="group p-6 border border-secondary/20 hover:border-secondary/60 rounded-xl bg-bg/40 transition-all"
+          >
+            <p className="text-[10px] uppercase tracking-widest text-secondary mb-2">
+              02
+            </p>
+            <h3 className="font-display text-2xl text-white font-bold mb-2 group-hover:text-secondary transition-colors">
+              Ключові особливості
+            </h3>
+            <p className="text-sm text-slate-400">
+              3D у браузері, realtime-рейтинг, мінімалістичне керування.
+            </p>
+          </Link>
+          <Link
+            to="/leaderboard"
+            className="group p-6 border border-accent/20 hover:border-accent/60 rounded-xl bg-bg/40 transition-all"
+          >
+            <p className="text-[10px] uppercase tracking-widest text-accent mb-2">
+              03
+            </p>
+            <h3 className="font-display text-2xl text-white font-bold mb-2 group-hover:text-accent transition-colors">
+              Топ гравців
+            </h3>
+            <p className="text-sm text-slate-400">
+              Глобальний рейтинг, що оновлюється у реальному часі.
+            </p>
+          </Link>
         </div>
       </section>
 
@@ -217,20 +149,7 @@ function Index() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/5 px-6 md:px-8 py-12">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-2 opacity-60">
-            <div className="size-6 bg-gradient-to-tr from-primary to-secondary rounded-sm" />
-            <span className="font-display font-bold text-lg tracking-tighter text-white">
-              NEO-DINO
-            </span>
-          </div>
-          <p className="text-xs text-slate-600 uppercase tracking-widest text-center">
-            © 2026 Дипломний проект · усі права збережено
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
