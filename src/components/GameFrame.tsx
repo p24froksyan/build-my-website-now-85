@@ -25,6 +25,10 @@ export function GameFrame({ onScoreSaved }: { onScoreSaved?: () => void }) {
 
   useEffect(() => {
     const handler = async (e: MessageEvent) => {
+      // Приймаємо повідомлення лише від гри з того ж походження (iframe /game/...)
+      if (e.origin !== window.location.origin) return;
+      if (iframeRef.current && e.source !== iframeRef.current.contentWindow)
+        return;
       const data = e.data;
       if (!data || typeof data !== "object" || data.type !== "neo-dino-score")
         return;
