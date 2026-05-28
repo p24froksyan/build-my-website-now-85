@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/use-auth";
 import gameCanvas from "@/assets/game-canvas.jpg";
 
 // URL до гри: розмісти білд гри у /public/game/index.html
-// АБО зміни константу нижче на повну URL (наприклад, на itch.io / GitHub Pages).
 // Гра має надсилати postMessage у форматі:
 //   { type: "neo-dino-score", score: number, duration_ms?: number }
 const GAME_URL = "/game/index.html";
@@ -16,7 +15,6 @@ export function GameFrame({ onScoreSaved }: { onScoreSaved?: () => void }) {
   const [status, setStatus] = useState<string | null>(null);
   const [gameAvailable, setGameAvailable] = useState<boolean | null>(null);
 
-  // Перевіряємо чи завантажена гра
   useEffect(() => {
     fetch(GAME_URL, { method: "HEAD" })
       .then((r) => setGameAvailable(r.ok))
@@ -25,7 +23,6 @@ export function GameFrame({ onScoreSaved }: { onScoreSaved?: () => void }) {
 
   useEffect(() => {
     const handler = async (e: MessageEvent) => {
-      // Приймаємо повідомлення лише від гри з того ж походження (iframe /game/...)
       if (e.origin !== window.location.origin) return;
       if (iframeRef.current && e.source !== iframeRef.current.contentWindow)
         return;
@@ -56,12 +53,12 @@ export function GameFrame({ onScoreSaved }: { onScoreSaved?: () => void }) {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="relative aspect-video w-full bg-surface border border-white/10 rounded-2xl overflow-hidden neon-glow">
+      <div className="relative aspect-video w-full bg-surface border border-black/15 rounded-2xl overflow-hidden neon-glow">
         {started && gameAvailable ? (
           <iframe
             ref={iframeRef}
             src={GAME_URL}
-            title="NEO-DINO 3D game"
+            title="DINO 3D game"
             className="w-full h-full"
             allow="autoplay; fullscreen; gamepad"
           />
@@ -69,18 +66,18 @@ export function GameFrame({ onScoreSaved }: { onScoreSaved?: () => void }) {
           <>
             <img
               src={gameCanvas}
-              alt="Превʼю 3D-сцени гри NEO-DINO"
+              alt="Превʼю 3D-сцени гри DINO 3D"
               width={1920}
               height={1088}
-              className="w-full h-full object-cover opacity-50"
+              className="w-full h-full object-cover opacity-70"
             />
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-bg/60 backdrop-blur-sm gap-4">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-bg/40 backdrop-blur-sm gap-4">
               {gameAvailable === false ? (
                 <div className="text-center max-w-md px-6">
                   <p className="text-accent font-bold uppercase tracking-widest text-sm mb-3">
                     Гру ще не підключено
                   </p>
-                  <p className="text-xs text-slate-400 leading-relaxed font-mono">
+                  <p className="text-xs text-slate-500 leading-relaxed font-mono">
                     Помісти білд гри у папку{" "}
                     <code className="text-primary">public/game/</code> (точка входу{" "}
                     <code className="text-primary">index.html</code>). Гра має
@@ -95,7 +92,7 @@ export function GameFrame({ onScoreSaved }: { onScoreSaved?: () => void }) {
                 <button
                   type="button"
                   onClick={() => setStarted(true)}
-                  className="px-10 py-4 bg-primary text-bg font-bold uppercase tracking-tighter text-xl transition-transform active:scale-95 hover:scale-105"
+                  className="px-10 py-4 bg-primary text-white font-bold uppercase tracking-tighter text-xl transition-transform active:scale-95 hover:scale-105 rounded-lg shadow-lg"
                 >
                   ▶ Грати
                 </button>
@@ -108,8 +105,8 @@ export function GameFrame({ onScoreSaved }: { onScoreSaved?: () => void }) {
             </div>
           </>
         )}
-        <div className="absolute top-4 left-4 px-3 py-1 bg-bg/70 backdrop-blur border border-primary/20 text-primary font-mono text-xs">
-          NEO-DINO
+        <div className="absolute top-4 left-4 px-3 py-1 bg-bg/80 backdrop-blur border border-primary/40 text-primary font-mono text-xs rounded">
+          DINO 3D
         </div>
       </div>
       {status && (

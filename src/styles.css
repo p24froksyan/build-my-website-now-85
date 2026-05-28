@@ -9,11 +9,12 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --color-bg: #0a0a0c;
-  --color-surface: #16161a;
-  --color-primary: #00f5ff;
-  --color-secondary: #bc13fe;
-  --color-accent: #ff00e5;
+  /* Voxel cartoon palette inspired by the in-game screenshot */
+  --color-bg: #7ec8e8;            /* sky blue */
+  --color-surface: #f5d896;       /* warm sand */
+  --color-primary: #f08a2a;       /* voxel orange */
+  --color-secondary: #5cab4d;     /* voxel tree green */
+  --color-accent: #c9523a;        /* warm clay red */
 }
 
 @theme inline {
@@ -32,12 +33,12 @@
 
 :root {
   --radius: 0.625rem;
-  --background: #0a0a0c;
-  --foreground: oklch(0.95 0.01 240);
-  --card: #16161a;
-  --card-foreground: oklch(0.95 0.01 240);
-  --border: oklch(1 0 0 / 8%);
-  --muted-foreground: oklch(0.65 0.02 240);
+  --background: #a8dcf0;
+  --foreground: #2a1c10;
+  --card: #fdeec0;
+  --card-foreground: #2a1c10;
+  --border: rgba(42, 28, 16, 0.15);
+  --muted-foreground: #6b4f33;
 }
 
 @layer base {
@@ -47,20 +48,29 @@
 
   html,
   body {
-    background-color: var(--color-bg);
-    color: oklch(0.85 0.02 240);
+    background:
+      linear-gradient(180deg, #a8dcf0 0%, #c8e6f4 55%, #f5d896 100%) fixed;
+    color: #2a1c10;
     font-family: var(--font-sans);
   }
 }
 
 @layer utilities {
   .neon-glow {
-    box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
+    box-shadow: 0 10px 30px -10px rgba(240, 138, 42, 0.45);
   }
   .text-glow {
-    text-shadow: 0 0 12px rgba(0, 245, 255, 0.4);
+    text-shadow: 2px 2px 0 rgba(42, 28, 16, 0.85);
   }
   .text-glow-magenta {
-    text-shadow: 0 0 14px rgba(188, 19, 254, 0.45);
+    text-shadow: 2px 2px 0 rgba(42, 28, 16, 0.85);
   }
+
+  /* Remap dark-theme utility colors used across the app to the new
+     light cartoon palette without rewriting every component. */
+  .text-white { color: #2a1c10 !important; }
+  .text-slate-300 { color: #3a2818 !important; }
+  .text-slate-400 { color: #5a4028 !important; }
+  .text-slate-500 { color: #7a5a3c !important; }
+  .text-slate-600 { color: #8a6a48 !important; }
 }

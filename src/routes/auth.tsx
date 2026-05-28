@@ -63,7 +63,7 @@ function AuthPage() {
         <Link to="/" className="flex items-center gap-2 justify-center mb-8">
           <div className="size-8 bg-gradient-to-tr from-primary to-secondary rounded-lg" />
           <span className="font-display font-bold text-2xl tracking-tighter text-white">
-            NEO-DINO
+            DINO 3D
           </span>
         </Link>
 

@@ -79,14 +79,14 @@ function HowToPlayPage() {
 
         <div className="mt-12 flex flex-wrap gap-4">
           <Link
-            to="/"
-            className="px-8 py-3 bg-primary text-bg font-bold uppercase tracking-tighter transition-transform active:scale-95"
+            to="/play"
+            className="px-8 py-3 bg-primary text-white font-bold uppercase tracking-tighter transition-transform active:scale-95 rounded-lg shadow"
           >
             ▶ Грати зараз
           </Link>
           <Link
             to="/leaderboard"
-            className="px-8 py-3 border border-white/10 hover:border-primary/40 text-slate-300 font-bold uppercase tracking-tighter transition-all"
+            className="px-8 py-3 border border-black/15 hover:border-primary/60 text-slate-400 font-bold uppercase tracking-tighter transition-all rounded-lg"
           >
             Дивитись рейтинг
           </Link>
