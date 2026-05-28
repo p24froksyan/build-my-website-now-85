@@ -8,11 +8,11 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
   head: () => ({
     meta: [
-      { title: "Мій профіль — NEO-DINO" },
+      { title: "Мій профіль — DINO 3D" },
       {
         name: "description",
         content:
-          "Особистий профіль гравця NEO-DINO: аватар, нікнейм і персональний рекорд.",
+          "Особистий профіль гравця DINO 3D: аватар, нікнейм і персональний рекорд.",
       },
     ],
   }),
@@ -26,13 +26,13 @@ function ProfilePage() {
   const [username, setUsername] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [bestScore, setBestScore] = useState<number>(0);
-  const [bestScoreId, setBestScoreId] = useState<string | null>(null);
-  const [bestInput, setBestInput] = useState<string>("");
+
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // redirect if not logged in
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [loading, user, navigate]);
@@ -50,20 +50,38 @@ function ProfilePage() {
     }
     const { data: top } = await supabase
       .from("scores")
-      .select("id, score")
+      .select("score")
       .eq("user_id", user.id)
       .order("score", { ascending: false })
       .limit(1)
       .maybeSingle();
     setBestScore(top?.score ?? 0);
-    setBestScoreId(top?.id ?? null);
-    setBestInput(String(top?.score ?? 0));
+    setNewEmail(user.email ?? "");
   };
 
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+
+  // realtime: рекорд оновлюється сам після забігу
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`profile-scores-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "scores", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const s = (payload.new as { score?: number })?.score ?? 0;
+          if (s > bestScore) setBestScore(s);
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [user, bestScore]);
 
   const saveUsername = async () => {
     if (!user) return;
@@ -117,55 +135,69 @@ function ProfilePage() {
     }
   };
 
-  const saveBest = async () => {
-    if (!user) return;
-    const val = Math.max(0, Math.floor(Number(bestInput) || 0));
+  const deleteAvatar = async () => {
+    if (!user || !avatarUrl) return;
+    if (!confirm("Видалити аватарку?")) return;
     setBusy(true);
-    if (bestScoreId) {
-      const { error } = await supabase
-        .from("scores")
-        .update({ score: val })
-        .eq("id", bestScoreId);
-      if (error) {
-        setBusy(false);
-        setStatus(`Помилка: ${error.message}`);
-        return;
+    // Витягуємо шлях з URL виду .../avatars/<user_id>/<file>
+    try {
+      const marker = "/avatars/";
+      const i = avatarUrl.indexOf(marker);
+      if (i !== -1) {
+        const path = avatarUrl.slice(i + marker.length);
+        await supabase.storage.from("avatars").remove([path]);
       }
-    } else {
-      const { error } = await supabase
-        .from("scores")
-        .insert({ user_id: user.id, score: val, duration_ms: 0 });
-      if (error) {
-        setBusy(false);
-        setStatus(`Помилка: ${error.message}`);
-        return;
-      }
+    } catch {
+      // ignore — навіть якщо не видалили файл, профіль очистимо
     }
-    setBusy(false);
-    setStatus("Рекорд оновлено");
-    await load();
-  };
-
-  const resetBest = async () => {
-    if (!user) return;
-    if (!confirm("Видалити всі свої результати? Цю дію не можна скасувати.")) return;
-    setBusy(true);
     const { error } = await supabase
-      .from("scores")
-      .delete()
-      .eq("user_id", user.id);
+      .from("profiles")
+      .update({ avatar_url: null })
+      .eq("id", user.id);
     setBusy(false);
     if (error) {
       setStatus(`Помилка: ${error.message}`);
     } else {
-      setStatus("Усі результати видалено");
-      await load();
+      setAvatarUrl(null);
+      setStatus("Аватар видалено");
+    }
+  };
+
+  const changeEmail = async () => {
+    const email = newEmail.trim();
+    if (!email || email === user?.email) {
+      setStatus("Введи нову адресу email");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ email });
+    setBusy(false);
+    setStatus(
+      error
+        ? `Помилка: ${error.message}`
+        : "На нову адресу надіслано лист для підтвердження",
+    );
+  };
+
+  const changePassword = async () => {
+    if (newPassword.length < 6) {
+      setStatus("Пароль має містити мінімум 6 символів");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setBusy(false);
+    if (error) {
+      setStatus(`Помилка: ${error.message}`);
+    } else {
+      setNewPassword("");
+      setStatus("Пароль оновлено");
     }
   };
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-bg text-slate-300 font-sans flex flex-col">
+      <div className="min-h-screen text-slate-300 font-sans flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center text-slate-500 font-mono text-sm">
           Завантаження...
@@ -175,10 +207,10 @@ function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg text-slate-300 font-sans flex flex-col">
+    <div className="min-h-screen text-slate-300 font-sans flex flex-col">
       <Navbar />
       <section className="px-6 md:px-8 py-20 max-w-3xl mx-auto w-full flex-1">
-        <div className="inline-block px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-primary text-[10px] font-bold uppercase tracking-widest mb-6">
+        <div className="inline-block px-3 py-1 rounded-full border border-primary/40 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest mb-6">
           Профіль
         </div>
         <h1 className="font-display text-5xl md:text-6xl font-bold text-white mb-12 leading-none">
@@ -190,8 +222,8 @@ function ProfilePage() {
         )}
 
         {/* Avatar */}
-        <div className="bg-surface/40 border border-white/10 rounded-2xl p-6 mb-6 flex items-center gap-6">
-          <div className="size-24 rounded-full overflow-hidden border-2 border-primary/40 bg-bg flex items-center justify-center neon-glow">
+        <div className="bg-surface/60 border border-black/15 rounded-2xl p-6 mb-6 flex items-center gap-6">
+          <div className="size-24 rounded-full overflow-hidden border-2 border-primary/50 bg-bg flex items-center justify-center neon-glow">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
@@ -218,19 +250,31 @@ function ProfilePage() {
                 e.target.value = "";
               }}
             />
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => fileRef.current?.click()}
-              className="px-4 py-2 border border-primary/30 hover:border-primary/60 text-primary text-xs font-bold uppercase tracking-widest transition-all disabled:opacity-50"
-            >
-              Завантажити
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => fileRef.current?.click()}
+                className="px-4 py-2 border border-primary/40 hover:border-primary/70 text-primary text-xs font-bold uppercase tracking-widest transition-all disabled:opacity-50 rounded"
+              >
+                Завантажити
+              </button>
+              {avatarUrl && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={deleteAvatar}
+                  className="px-4 py-2 border border-accent/40 hover:border-accent/70 text-accent text-xs font-bold uppercase tracking-widest transition-all disabled:opacity-50 rounded"
+                >
+                  Видалити
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Username */}
-        <div className="bg-surface/40 border border-white/10 rounded-2xl p-6 mb-6">
+        <div className="bg-surface/60 border border-black/15 rounded-2xl p-6 mb-6">
           <p className="text-white font-bold mb-3">Нікнейм</p>
           <div className="flex gap-3">
             <input
@@ -238,54 +282,75 @@ function ProfilePage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               maxLength={24}
-              className="flex-1 bg-bg border border-white/10 focus:border-primary/50 rounded px-4 py-2 text-white outline-none font-mono"
+              className="flex-1 bg-[color:var(--color-bg)]/40 border border-black/15 focus:border-primary/60 rounded px-4 py-2 text-white outline-none font-mono"
             />
             <button
               type="button"
               disabled={busy}
               onClick={saveUsername}
-              className="px-5 py-2 bg-primary text-bg font-bold uppercase tracking-widest text-xs transition-transform active:scale-95 disabled:opacity-50"
+              className="px-5 py-2 bg-primary text-white font-bold uppercase tracking-widest text-xs transition-transform active:scale-95 disabled:opacity-50 rounded"
             >
               Зберегти
             </button>
           </div>
         </div>
 
-        {/* Personal record */}
-        <div className="bg-surface/40 border border-white/10 rounded-2xl p-6">
+        {/* Personal record (auto) */}
+        <div className="bg-surface/60 border border-black/15 rounded-2xl p-6 mb-6">
           <div className="flex items-baseline justify-between mb-3">
             <p className="text-white font-bold">Особистий рекорд</p>
-            <p className="font-mono text-2xl text-primary text-glow">
+            <p className="font-mono text-3xl text-primary text-glow">
               {bestScore.toLocaleString()}
             </p>
           </div>
-          <p className="text-xs text-slate-500 mb-4">
-            Зазвичай рекорд оновлюється автоматично після забігу. Тут можеш
-            відкоригувати число вручну або скинути всі свої результати.
+          <p className="text-xs text-slate-500">
+            Оновлюється автоматично після кожного забігу.
+          </p>
+        </div>
+
+        {/* Email */}
+        <div className="bg-surface/60 border border-black/15 rounded-2xl p-6 mb-6">
+          <p className="text-white font-bold mb-1">Email</p>
+          <p className="text-xs text-slate-500 mb-3">
+            Поточний: <span className="font-mono">{user.email}</span>
           </p>
           <div className="flex flex-wrap gap-3">
             <input
-              type="number"
-              min={0}
-              value={bestInput}
-              onChange={(e) => setBestInput(e.target.value)}
-              className="w-40 bg-bg border border-white/10 focus:border-primary/50 rounded px-4 py-2 text-white outline-none font-mono"
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              className="flex-1 min-w-[200px] bg-[color:var(--color-bg)]/40 border border-black/15 focus:border-primary/60 rounded px-4 py-2 text-white outline-none font-mono"
             />
             <button
               type="button"
               disabled={busy}
-              onClick={saveBest}
-              className="px-5 py-2 bg-primary text-bg font-bold uppercase tracking-widest text-xs transition-transform active:scale-95 disabled:opacity-50"
+              onClick={changeEmail}
+              className="px-5 py-2 bg-primary text-white font-bold uppercase tracking-widest text-xs transition-transform active:scale-95 disabled:opacity-50 rounded"
             >
-              Оновити рекорд
+              Змінити email
             </button>
+          </div>
+        </div>
+
+        {/* Password */}
+        <div className="bg-surface/60 border border-black/15 rounded-2xl p-6">
+          <p className="text-white font-bold mb-3">Новий пароль</p>
+          <div className="flex flex-wrap gap-3">
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              minLength={6}
+              placeholder="••••••••"
+              className="flex-1 min-w-[200px] bg-[color:var(--color-bg)]/40 border border-black/15 focus:border-primary/60 rounded px-4 py-2 text-white outline-none font-mono"
+            />
             <button
               type="button"
               disabled={busy}
-              onClick={resetBest}
-              className="px-5 py-2 border border-accent/30 hover:border-accent/60 text-accent font-bold uppercase tracking-widest text-xs transition-all disabled:opacity-50"
+              onClick={changePassword}
+              className="px-5 py-2 bg-primary text-white font-bold uppercase tracking-widest text-xs transition-transform active:scale-95 disabled:opacity-50 rounded"
             >
-              Скинути всі
+              Змінити пароль
             </button>
           </div>
         </div>

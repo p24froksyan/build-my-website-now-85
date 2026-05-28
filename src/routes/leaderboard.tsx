@@ -42,8 +42,8 @@ function LeaderboardPage() {
 
         <div className="mt-12 flex justify-center">
           <Link
-            to="/"
-            className="px-8 py-3 bg-primary text-bg font-bold uppercase tracking-tighter transition-transform active:scale-95"
+            to="/play"
+            className="px-8 py-3 bg-primary text-white font-bold uppercase tracking-tighter transition-transform active:scale-95 rounded-lg shadow"
           >
             ▶ Зробити свій забіг
           </Link>
