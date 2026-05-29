@@ -27,16 +27,19 @@ function AuthPage() {
     if (!authLoading && session) navigate({ to: "/", replace: true });
   }, [session, authLoading, navigate]);
 
+  const [info, setInfo] = useState<string | null>(null);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setInfo(null);
     setLoading(true);
     try {
       if (mode === "register") {
         if (username.trim().length < 3) {
           throw new Error("Нікнейм має містити мінімум 3 символи");
         }
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -45,11 +48,32 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+
+        // Якщо email-підтвердження вимкнено — Supabase одразу повертає сесію
+        if (data.session) {
+          navigate({ to: "/", replace: true });
+          return;
+        }
+
+        // Інакше пробуємо одразу залогінити (часто спрацьовує)
+        const { error: signInErr } =
+          await supabase.auth.signInWithPassword({ email, password });
+        if (!signInErr) {
+          navigate({ to: "/", replace: true });
+          return;
+        }
+
+        // Email confirmation увімкнено — перекидаємо на вкладку входу
+        setMode("login");
+        setPassword("");
+        setInfo(
+          "Акаунт створено. Підтвердь email у листі, потім увійди тут.",
+        );
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        navigate({ to: "/", replace: true });
       }
-      navigate({ to: "/", replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Помилка");
     } finally {
@@ -139,11 +163,16 @@ function AuthPage() {
                 {error}
               </p>
             )}
+            {info && (
+              <p className="text-xs text-secondary border border-secondary/40 bg-secondary/10 p-3 rounded">
+                {info}
+              </p>
+            )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-primary text-bg font-bold uppercase tracking-tighter text-lg transition-transform active:scale-95 disabled:opacity-50"
+              className="w-full py-4 bg-primary text-white font-bold uppercase tracking-tighter text-lg rounded-lg shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
             >
               {loading
                 ? "Обробка..."
