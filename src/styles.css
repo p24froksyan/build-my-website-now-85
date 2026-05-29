@@ -57,20 +57,38 @@
 
 @layer utilities {
   .neon-glow {
-    box-shadow: 0 10px 30px -10px rgba(240, 138, 42, 0.45);
+    box-shadow: 0 10px 30px -10px rgba(240, 138, 42, 0.55);
   }
   .text-glow {
-    text-shadow: 2px 2px 0 rgba(42, 28, 16, 0.85);
+    text-shadow: 2px 2px 0 rgba(42, 28, 16, 0.9);
   }
   .text-glow-magenta {
-    text-shadow: 2px 2px 0 rgba(42, 28, 16, 0.85);
+    text-shadow: 2px 2px 0 rgba(42, 28, 16, 0.9);
   }
 
-  /* Remap dark-theme utility colors used across the app to the new
-     light cartoon palette without rewriting every component. */
-  .text-white { color: #2a1c10 !important; }
-  .text-slate-300 { color: #3a2818 !important; }
-  .text-slate-400 { color: #5a4028 !important; }
-  .text-slate-500 { color: #7a5a3c !important; }
-  .text-slate-600 { color: #8a6a48 !important; }
+  /* Strong contrast on sky-blue / sand backgrounds. */
+  .text-white { color: #1a1108 !important; }
+  .text-slate-300 { color: #241608 !important; }
+  .text-slate-400 { color: #2a1c10 !important; }
+  .text-slate-500 { color: #3a2410 !important; }
+  .text-slate-600 { color: #2e1d0c !important; }
+
+  /* Global smooth transitions for buttons / links. */
+  button,
+  a {
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease,
+      filter 180ms ease,
+      background-color 180ms ease,
+      color 180ms ease,
+      border-color 180ms ease;
+  }
+  button:not(:disabled):hover,
+  a:hover {
+    filter: brightness(1.06);
+  }
+  button:not(:disabled):active {
+    transform: scale(0.97);
+  }
 }
