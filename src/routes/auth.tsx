@@ -27,16 +27,19 @@ function AuthPage() {
     if (!authLoading && session) navigate({ to: "/", replace: true });
   }, [session, authLoading, navigate]);
 
+  const [info, setInfo] = useState<string | null>(null);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setInfo(null);
     setLoading(true);
     try {
       if (mode === "register") {
         if (username.trim().length < 3) {
           throw new Error("Нікнейм має містити мінімум 3 символи");
         }
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -45,11 +48,32 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+
+        // Якщо email-підтвердження вимкнено — Supabase одразу повертає сесію
+        if (data.session) {
+          navigate({ to: "/", replace: true });
+          return;
+        }
+
+        // Інакше пробуємо одразу залогінити (часто спрацьовує)
+        const { error: signInErr } =
+          await supabase.auth.signInWithPassword({ email, password });
+        if (!signInErr) {
+          navigate({ to: "/", replace: true });
+          return;
+        }
+
+        // Email confirmation увімкнено — перекидаємо на вкладку входу
+        setMode("login");
+        setPassword("");
+        setInfo(
+          "Акаунт створено. Підтвердь email у листі, потім увійди тут.",
+        );
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        navigate({ to: "/", replace: true });
       }
-      navigate({ to: "/", replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Помилка");
     } finally {
