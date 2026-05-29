@@ -163,11 +163,16 @@ function AuthPage() {
                 {error}
               </p>
             )}
+            {info && (
+              <p className="text-xs text-secondary border border-secondary/40 bg-secondary/10 p-3 rounded">
+                {info}
+              </p>
+            )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-primary text-bg font-bold uppercase tracking-tighter text-lg transition-transform active:scale-95 disabled:opacity-50"
+              className="w-full py-4 bg-primary text-white font-bold uppercase tracking-tighter text-lg rounded-lg shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
             >
               {loading
                 ? "Обробка..."
